@@ -1,0 +1,27 @@
+{
+  "name": "ai-voice-text-chatbot",
+  "version": "1.0.0",
+  "description": "Complete AI Chatbot with Text and Voice Input/Output, Live Speech Preview, Audio Visualizer, and Multi-Provider AI Engine",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "keywords": [
+    "ai",
+    "chatbot",
+    "voice-assistant",
+    "speech-to-text",
+    "text-to-speech",
+    "gemini",
+    "openai",
+    "web-speech-api"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2"
+  }
+}

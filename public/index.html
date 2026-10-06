@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Next-Gen AI Chatbot with interactive Voice Recognition (Speech-to-Text), Speech Synthesis (Text-to-Speech), Audio Visualizer, and Gemini/OpenAI integration.">
+  <meta name="theme-color" content="#0b0f19">
+  <title>Aura Voice AI — Intelligent Voice & Text Assistant</title>
+  
+  <!-- Google Fonts: Inter & Outfit -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome for crisp UI icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <!-- Application Stylesheets -->
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/chat.css">
+  <link rel="stylesheet" href="css/voice.css">
+  <link rel="stylesheet" href="css/modal.css">
+</head>
+<body class="theme-cyber-dark">
+
+  <div id="app" class="app-layout">
+    
+    <!-- Left Sidebar (Chat History & Navigation) -->
+    <aside id="sidebar" class="sidebar">
+      <div class="sidebar-header">
+        <div class="logo-container">
+          <div class="logo-icon-wrap">
+            <i class="fa-solid fa-brain-circuit"></i>
+          </div>
+          <div class="logo-text">
+            <h2>Aura <span class="gradient-text">Voice AI</span></h2>
+            <span class="badge badge-subtle" id="provider-badge">Built-in AI</span>
+          </div>
+        </div>
+        <button id="close-sidebar-btn" class="icon-btn mobile-only" aria-label="Close Sidebar">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="sidebar-actions">
+        <button id="new-chat-btn" class="btn btn-primary btn-full">
+          <i class="fa-solid fa-plus"></i> New Conversation
+        </button>
+      </div>
+
+      <div class="history-search-wrap">
+        <i class="fa-solid fa-magnifying-glass search-icon"></i>
+        <input type="text" id="history-search" placeholder="Search conversations..." aria-label="Search past chats">
+      </div>
+
+      <div class="history-list-container">
+        <div class="section-title">
+          <span>Recent Chats</span>
+          <button id="clear-all-chats-btn" class="btn-text-xs" title="Clear all history">Clear All</button>
+        </div>
+        <ul id="history-list" class="history-list">
+          <!-- Populated dynamically by chat-manager.js -->
+        </ul>
+      </div>
+
+      <div class="sidebar-footer">
+        <button id="export-history-btn" class="sidebar-footer-btn" title="Export conversations">
+          <i class="fa-solid fa-file-export"></i> <span>Export Chat</span>
+        </button>
+        <button id="settings-sidebar-btn" class="sidebar-footer-btn" title="Settings">
+          <i class="fa-solid fa-sliders"></i> <span>Preferences</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Sidebar Overlay for mobile -->
+    <div id="sidebar-overlay" class="sidebar-overlay"></div>
+
+    <!-- Main Chat Workspace -->
+    <main class="main-workspace">
+      
+      <!-- Top Navigation Bar -->
+      <header class="top-navbar">
+        <div class="navbar-left">
+          <button id="toggle-sidebar-btn" class="icon-btn" aria-label="Toggle history menu">
+            <i class="fa-solid fa-bars-staggered"></i>
+          </button>
+          <div class="status-indicator-pill" id="ai-status-pill">
+            <span class="status-dot"></span>
+            <span class="status-text" id="ai-status-text">Assistant Ready</span>
+          </div>
+        </div>
+
+        <div class="navbar-center">
+          <div id="active-voice-speaking-bar" class="speaking-banner hidden">
+            <div class="audio-wave-mini">
+              <span></span><span></span><span></span><span></span><span></span>
+            </div>
+            <span class="speaking-text">AI is speaking...</span>
+            <button id="stop-speaking-btn" class="btn-danger-xs" title="Stop Voice Output">
+              <i class="fa-solid fa-circle-stop"></i> Stop
+            </button>
+          </div>
+        </div>
+
+        <div class="navbar-right">
+          <button id="auto-speak-toggle-btn" class="icon-btn toggle-btn active" title="Toggle Auto-TTS (Read responses aloud)" aria-label="Auto-speak toggle">
+            <i class="fa-solid fa-volume-high"></i>
+          </button>
+          <button id="settings-btn" class="icon-btn" title="Settings & API Keys" aria-label="Open Settings">
+            <i class="fa-solid fa-gear"></i>
+          </button>
+        </div>
+      </header>
+
+      <!-- Chat Stream Messages Container -->
+      <div id="chat-stream" class="chat-stream">
+        
+        <!-- Welcome Hero View (Shown when conversation is empty) -->
+        <div id="welcome-view" class="welcome-hero">
+          <div class="hero-visual">
+            <div class="pulsing-orb">
+              <div class="orb-core"></div>
+              <div class="orb-glow"></div>
+            </div>
+          </div>
+          <h1 class="hero-title">Experience <span class="gradient-text">Conversational Intelligence</span></h1>
+          <p class="hero-subtitle">
+            Speak naturally with your microphone or type messages. Aura seamlessly turns your voice into text, reasons, and talks back.
+          </p>
+
+          <div class="feature-tags">
+            <span class="tag"><i class="fa-solid fa-microphone-lines"></i> Live Speech Recognition</span>
+            <span class="tag"><i class="fa-solid fa-waveform-lines"></i> Text-to-Speech Output</span>
+            <span class="tag"><i class="fa-solid fa-bolt"></i> Gemini & OpenAI Ready</span>
+            <span class="tag"><i class="fa-solid fa-shield-halved"></i> 100% Privacy Friendly</span>
+          </div>
+
+          <div class="quick-prompts-grid">
+            <div class="prompt-card" data-prompt="Explain the difference between Speech-to-Text and Text-to-Speech with examples.">
+              <div class="prompt-icon"><i class="fa-solid fa-microphone"></i></div>
+              <div class="prompt-info">
+                <h4>Voice AI Primer</h4>
+                <p>Explain Speech-to-Text vs Text-to-Speech</p>
+              </div>
+            </div>
+
+            <div class="prompt-card" data-prompt="Write a modern JavaScript async function with robust try/catch error handling and timeout.">
+              <div class="prompt-icon"><i class="fa-solid fa-code"></i></div>
+              <div class="prompt-info">
+                <h4>Code Architect</h4>
+                <p>Modern JS async function with error handling</p>
+              </div>
+            </div>
+
+            <div class="prompt-card" data-prompt="What are 5 creative tips to make web user interfaces feel alive and engaging?">
+              <div class="prompt-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+              <div class="prompt-info">
+                <h4>UI/UX Strategy</h4>
+                <p>5 creative ideas for micro-animations</p>
+              </div>
+            </div>
+
+            <div class="prompt-card" data-prompt="Tell me an engaging short science-fiction story about an AI discovering music.">
+              <div class="prompt-icon"><i class="fa-solid fa-book-open"></i></div>
+              <div class="prompt-info">
+                <h4>Creative Story</h4>
+                <p>Story of an AI discovering sound and rhythm</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Messages List -->
+        <div id="messages-container" class="messages-container"></div>
+        
+        <!-- Live Speech Recognition Preview Card (Shown while user is speaking) -->
+        <div id="speech-preview-card" class="speech-preview-card hidden">
+          <div class="speech-preview-header">
+            <div class="listening-tag">
+              <span class="pulse-red-dot"></span>
+              <span>Live Microphone Input</span>
+            </div>
+            <div class="speech-preview-timer" id="speech-duration">00:00</div>
+          </div>
+          
+          <div class="speech-preview-body">
+            <p id="speech-interim-text" class="speech-interim-text">Listening... Speak into your microphone</p>
+          </div>
+
+          <div class="speech-preview-actions">
+            <button id="speech-cancel-btn" class="btn btn-ghost btn-sm">
+              <i class="fa-solid fa-xmark"></i> Discard
+            </button>
+            <button id="speech-edit-btn" class="btn btn-secondary btn-sm">
+              <i class="fa-solid fa-pen-to-square"></i> Send to Input Box
+            </button>
+            <button id="speech-send-now-btn" class="btn btn-primary btn-sm">
+              <i class="fa-solid fa-paper-plane"></i> Send Now
+            </button>
+          </div>
+        </div>
+
+        <!-- Scroll to bottom float button -->
+        <button id="scroll-bottom-btn" class="scroll-bottom-btn hidden" title="Scroll to bottom">
+          <i class="fa-solid fa-arrow-down"></i>
+        </button>
+      </div>
+
+      <!-- Bottom Audio Visualizer & Input Console -->
+      <footer class="input-console">
+        
+        <!-- Waveform Audio Visualizer Canvas -->
+        <div id="audio-visualizer-wrap" class="audio-visualizer-wrap hidden">
+          <canvas id="visualizer-canvas" height="36"></canvas>
+          <span class="visualizer-label">Mic Active</span>
+        </div>
+
+        <!-- Primary Control Bar -->
+        <div class="input-form-container">
+          <div class="input-wrapper">
+            
+            <!-- Voice Input Button (Mic) -->
+            <div class="mic-button-wrapper">
+              <button id="mic-toggle-btn" class="mic-btn" title="Click to Speak (Ctrl+M)" aria-label="Toggle voice input">
+                <i class="fa-solid fa-microphone"></i>
+                <div class="mic-ping-ring"></div>
+              </button>
+            </div>
+
+            <!-- Message Textarea -->
+            <textarea 
+              id="chat-textarea" 
+              rows="1" 
+              placeholder="Type a message, or press the mic to speak... (Enter to send, Shift+Enter for newline)"
+              aria-label="Chat input field"
+            ></textarea>
+
+            <!-- Action buttons inside input box -->
+            <div class="input-right-actions">
+              <span id="char-counter" class="char-counter hidden">0</span>
+              <button id="send-msg-btn" class="send-btn" title="Send message (Enter)" aria-label="Send message">
+                <i class="fa-solid fa-arrow-up"></i>
+              </button>
+            </div>
+
+          </div>
+
+          <!-- Bottom micro hints -->
+          <div class="input-hints">
+            <span><kbd>Enter</kbd> Send</span>
+            <span><kbd>Shift+Enter</kbd> New Line</span>
+            <span><kbd>Ctrl+M</kbd> Voice Input</span>
+            <span id="tts-status-hint"><i class="fa-solid fa-volume-high"></i> TTS Voice Ready</span>
+          </div>
+        </div>
+
+      </footer>
+
+    </main>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+      <div class="modal-card">
+        <div class="modal-header">
+          <div class="modal-title-wrap">
+            <i class="fa-solid fa-sliders modal-icon"></i>
+            <h3 id="settings-title">Settings & Preferences</h3>
+          </div>
+          <button id="close-settings-btn" class="icon-btn" aria-label="Close settings">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+
+        <div class="modal-body">
+          
+          <!-- AI Engine / Provider Settings -->
+          <div class="settings-group">
+            <h4 class="settings-section-title"><i class="fa-solid fa-robot"></i> AI Engine Provider</h4>
+            
+            <div class="form-row">
+              <label for="provider-select">Selected AI Provider:</label>
+              <select id="provider-select" class="form-control">
+                <option value="builtin">Built-in Smart Assistant (No API Key needed)</option>
+                <option value="gemini">Google Gemini AI</option>
+                <option value="openai">OpenAI (ChatGPT)</option>
+              </select>
+            </div>
+
+            <div id="api-key-group" class="form-row hidden">
+              <label for="api-key-input">API Key:</label>
+              <div class="password-input-wrap">
+                <input type="password" id="api-key-input" class="form-control" placeholder="Paste your API key here...">
+                <button type="button" id="toggle-key-visibility" class="icon-btn-sm" title="Toggle visibility">
+                  <i class="fa-solid fa-eye"></i>
+                </button>
+              </div>
+              <small class="form-hint" id="api-key-hint">Keys are stored securely in your local browser storage.</small>
+            </div>
+
+            <div class="form-row">
+              <label for="system-instruction-input">Custom System Persona / Instructions:</label>
+              <textarea id="system-instruction-input" class="form-control" rows="2" placeholder="e.g. You are an expert programming tutor who provides clear, friendly explanations."></textarea>
+            </div>
+          </div>
+
+          <!-- Speech-to-Text (STT) Settings -->
+          <div class="settings-group">
+            <h4 class="settings-section-title"><i class="fa-solid fa-microphone-lines"></i> Voice Input (Speech Recognition)</h4>
+            
+            <div class="form-row">
+              <label for="stt-lang-select">Recognition Language:</label>
+              <select id="stt-lang-select" class="form-control">
+                <option value="en-US">English (US)</option>
+                <option value="en-GB">English (UK)</option>
+                <option value="en-IN">English (India)</option>
+                <option value="es-ES">Spanish (Spain)</option>
+                <option value="es-MX">Spanish (Mexico)</option>
+                <option value="fr-FR">French (France)</option>
+                <option value="de-DE">German (Germany)</option>
+                <option value="it-IT">Italian (Italy)</option>
+                <option value="pt-BR">Portuguese (Brazil)</option>
+                <option value="ja-JP">Japanese</option>
+                <option value="ko-KR">Korean</option>
+                <option value="zh-CN">Chinese (Simplified)</option>
+                <option value="hi-IN">Hindi</option>
+                <option value="ar-SA">Arabic</option>
+              </select>
+            </div>
+
+            <div class="form-toggle-row">
+              <div class="toggle-label-wrap">
+                <strong>Auto-Send on Speech End</strong>
+                <small>Automatically send recognized voice message after a brief pause</small>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="stt-autosend-toggle">
+                <span class="slider round"></span>
+              </label>
+            </div>
+
+            <div class="form-toggle-row">
+              <div class="toggle-label-wrap">
+                <strong>Continuous Listening Mode</strong>
+                <small>Keep microphone active until manually toggled off</small>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="stt-continuous-toggle" checked>
+                <span class="slider round"></span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Text-to-Speech (TTS) Settings -->
+          <div class="settings-group">
+            <h4 class="settings-section-title"><i class="fa-solid fa-volume-high"></i> Voice Output (Speech Synthesis)</h4>
+            
+            <div class="form-toggle-row">
+              <div class="toggle-label-wrap">
+                <strong>Auto-Speak Responses</strong>
+                <small>Automatically read AI replies out loud</small>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="tts-auto-speak-toggle" checked>
+                <span class="slider round"></span>
+              </label>
+            </div>
+
+            <div class="form-row">
+              <label for="tts-voice-select">TTS Voice Character:</label>
+              <div class="voice-select-wrap">
+                <select id="tts-voice-select" class="form-control">
+                  <option value="">Loading system voices...</option>
+                </select>
+                <button type="button" id="test-voice-btn" class="btn btn-secondary btn-sm" title="Preview Voice">
+                  <i class="fa-solid fa-play"></i> Test Voice
+                </button>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="range-header">
+                <label for="tts-rate-range">Speaking Speed / Rate:</label>
+                <span id="tts-rate-val" class="range-val">1.0x</span>
+              </div>
+              <input type="range" id="tts-rate-range" min="0.5" max="2.0" step="0.1" value="1.0" class="form-range">
+            </div>
+
+            <div class="form-row">
+              <div class="range-header">
+                <label for="tts-pitch-range">Voice Pitch:</label>
+                <span id="tts-pitch-val" class="range-val">1.0</span>
+              </div>
+              <input type="range" id="tts-pitch-range" min="0.5" max="1.5" step="0.1" value="1.0" class="form-range">
+            </div>
+          </div>
+
+          <!-- Appearance / Theme Settings -->
+          <div class="settings-group">
+            <h4 class="settings-section-title"><i class="fa-solid fa-palette"></i> Appearance Theme</h4>
+            <div class="theme-options-grid">
+              <button type="button" class="theme-option-card active" data-theme="theme-cyber-dark">
+                <div class="theme-preview cyber-dark-preview"></div>
+                <span>Cyber Dark</span>
+              </button>
+              <button type="button" class="theme-option-card" data-theme="theme-midnight-blue">
+                <div class="theme-preview midnight-blue-preview"></div>
+                <span>Midnight Blue</span>
+              </button>
+              <button type="button" class="theme-option-card" data-theme="theme-clean-light">
+                <div class="theme-preview clean-light-preview"></div>
+                <span>Clean Light</span>
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="modal-footer">
+          <button id="reset-settings-btn" class="btn btn-ghost">Reset Defaults</button>
+          <button id="save-settings-btn" class="btn btn-primary">Save & Apply</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Export Modal -->
+    <div id="export-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true">
+      <div class="modal-card modal-card-sm">
+        <div class="modal-header">
+          <div class="modal-title-wrap">
+            <i class="fa-solid fa-file-export modal-icon"></i>
+            <h3>Export Conversation</h3>
+          </div>
+          <button id="close-export-btn" class="icon-btn" aria-label="Close export modal">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+        <div class="modal-body">
+          <p class="export-desc">Choose a format to download your active conversation:</p>
+          <div class="export-options">
+            <button id="export-md-btn" class="export-btn">
+              <i class="fa-brands fa-markdown export-icon"></i>
+              <div>
+                <strong>Markdown (.md)</strong>
+                <small>Formatted text with headings & code</small>
+              </div>
+            </button>
+            <button id="export-json-btn" class="export-btn">
+              <i class="fa-solid fa-code export-icon"></i>
+              <div>
+                <strong>JSON (.json)</strong>
+                <small>Structured raw messages data</small>
+              </div>
+            </button>
+            <button id="export-txt-btn" class="export-btn">
+              <i class="fa-solid fa-file-lines export-icon"></i>
+              <div>
+                <strong>Plain Text (.txt)</strong>
+                <small>Simple readable transcript</small>
+              </div>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="toast-container" aria-live="polite"></div>
+
+  </div>
+
+  <!-- Application Modules -->
+  <script src="js/config.js" type="module"></script>
+  <script src="js/speech-to-text.js" type="module"></script>
+  <script src="js/text-to-speech.js" type="module"></script>
+  <script src="js/audio-visualizer.js" type="module"></script>
+  <script src="js/chat-manager.js" type="module"></script>
+  <script src="js/ai-service.js" type="module"></script>
+  <script src="js/ui.js" type="module"></script>
+  <script src="js/app.js" type="module"></script>
+</body>
+</html>
